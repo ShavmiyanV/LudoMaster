@@ -14,32 +14,35 @@ This project was developed for the *Network Programming Assignment* — demonstr
 
 ## 🧱 Project Structure
 
+
+
 LudoNetworkGame/
 │
 ├── src/
-│ ├── client/
-│ │ ├── LudoClient.java
-│ │ ├── LudoBoardUI.java
-│ │
-│ ├── server/
-│ │ ├── LudoServer.java
-│ │ ├── ClientHandler.java
-│ │ ├── GameManager.java
-│ │
-│ ├── model/
-│ │ ├── Player.java
-│ │ ├── BotPlayer.java
-│ │ ├── GameState.java
-│ │ ├── Message.java
-│ │
-│ ├── util/
-│ │ ├── Constants.java
-│ │
-│ └── Main.java
+│   ├── client/
+│   │   ├── LudoClient.java
+│   │   ├── LudoBoardUI.java
+│   │
+│   ├── server/
+│   │   ├── LudoServer.java
+│   │   ├── ClientHandler.java
+│   │   ├── GameManager.java
+│   │
+│   ├── model/
+│   │   ├── Player.java
+│   │   ├── BotPlayer.java
+│   │   ├── GameState.java
+│   │   ├── Message.java
+│   │
+│   ├── util/
+│   │   ├── Constants.java
+│   │
+│   └── Main.java
 │
-├── bin/ # ← Compiled .class files (ignored by Git)
+├── bin/                # ← Compiled .class files (ignored by Git)
 ├── README.md
 └── .gitignore
+
 
 
 ---
