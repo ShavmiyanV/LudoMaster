@@ -12,7 +12,7 @@ public class GameManager {
     public synchronized void addPlayer(Player player, ClientHandler handler) throws IOException {
         state.addPlayer(player);
         clients.put(player.getName(), handler);
-        broadcast(new Message("INFO", player.getName() + " joined!", "SERVER"));
+        broadcast(new Message("INFO", player.getName() + " joined the game!", "SERVER"));
         sendUserListToAll();
     }
 
@@ -35,7 +35,7 @@ public class GameManager {
     }
 
     public synchronized void startGame() throws IOException {
-        broadcast(new Message("INFO", "Game Started with " + state.getPlayers().size() + " players!", "SERVER"));
+        broadcast(new Message("INFO", "Game Started! 🎮", "SERVER"));
         sendUserListToAll();
         updateAll();
         nextTurn();
@@ -46,8 +46,18 @@ public class GameManager {
 
         if (type.equals(Message.ROLL) && p.getName().equals(state.getCurrentTurn())) {
             int dice = (int) (Math.random() * 6 + 1);
-            broadcast(new Message("INFO", p.getName() + " rolled " + dice + " 🎲", "SERVER"));
-            movePlayer(p.getName(), dice);
+            String result = state.movePlayer(p.getName(), dice);
+            broadcast(new Message("INFO", result, "SERVER"));
+            updateAll();
+            
+            // If turn didn't change (rolled 6), enable roll again
+            if (result.contains("Roll again")) {
+                if (clients.containsKey(p.getName())) {
+                    clients.get(p.getName()).sendMessage(new Message("YOUR_TURN", "", "SERVER"));
+                }
+            } else {
+                nextTurn();
+            }
         } else if (type.equals(Message.PUBLIC_CHAT)) {
             broadcastChat(msg);
         } else if (type.equals(Message.PRIVATE_CHAT)) {
@@ -57,20 +67,19 @@ public class GameManager {
 
     public synchronized void botMove(String botName, int dice) throws IOException {
         if (botName.equals(state.getCurrentTurn())) {
-            movePlayer(botName, dice);
+            String result = state.movePlayer(botName, dice);
+            broadcast(new Message("INFO", result, "SERVER"));
+            updateAll();
+            
+            if (!result.contains("Roll again")) {
+                nextTurn();
+            }
         }
-    }
-
-    private void movePlayer(String name, int dice) throws IOException {
-        boolean rolledSix = state.movePlayer(name, dice);
-        broadcast(new Message("MOVE", name + " moved to position " + state.getPlayers().get(name).getPosition(), "SERVER"));
-        updateAll();
-        if (!rolledSix) nextTurn();
     }
 
     private void nextTurn() throws IOException {
         String current = state.getCurrentTurn();
-        broadcast(new Message("INFO", "It's " + current + "'s turn!", "SERVER"));
+        broadcast(new Message("INFO", "🎲 " + current + "'s turn!", "SERVER"));
         if (clients.containsKey(current)) {
             clients.get(current).sendMessage(new Message("YOUR_TURN", "", "SERVER"));
         }
@@ -120,6 +129,7 @@ public class GameManager {
         String recipient = chatMsg.getRecipient();
         String sender = chatMsg.getPlayerName();
         System.out.println("[CHAT] Private from " + sender + " to " + recipient + ": " + chatMsg.getContent());
+        
         ClientHandler recipientHandler = clients.get(recipient);
         if (recipientHandler != null) {
             try {
@@ -128,6 +138,7 @@ public class GameManager {
                 System.err.println("[CHAT] Failed to send to recipient: " + e.getMessage());
             }
         }
+        
         ClientHandler senderHandler = clients.get(sender);
         if (senderHandler != null) {
             try {

@@ -65,7 +65,7 @@ public class ClientHandler implements Runnable {
             out.writeObject(msg);
             out.flush();
         } catch (IOException e) {
-            disconnect(); // safe now, won’t recurse
+            disconnect();
         }
     }
 

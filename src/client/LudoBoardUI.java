@@ -1,7 +1,7 @@
 package client;
 
 import model.Message;
-
+import model.Player;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -11,19 +11,16 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Enhanced Ludo Board UI with integrated chat functionality
- * Features modern dark theme with blue accents, split layout with game board and chat
- */
 public class LudoBoardUI extends JFrame {
     private JLabel infoLabel;
     private JButton rollDiceButton;
+    private JButton chatToggleButton;
     private ObjectOutputStream out;
     private String playerName;
-    @SuppressWarnings("unused")
-    private Map<String, Integer> positions = new HashMap<>();
     private BoardPanel boardPanel;
     private ChatPanel chatPanel;
+    private JSplitPane mainSplitPane;
+    private boolean chatVisible = true;
     
     // Modern Blue Theme Colors
     private static final Color PRIMARY_COLOR = new Color(0, 123, 255);
@@ -32,6 +29,7 @@ public class LudoBoardUI extends JFrame {
     private static final Color PANEL_BG = new Color(25, 30, 48);
     private static final Color TEXT_COLOR = new Color(255, 255, 255);
     private static final Color ACCENT_COLOR = new Color(64, 169, 255);
+    private static final Color SUCCESS_COLOR = new Color(34, 197, 94);
 
     public LudoBoardUI(String playerName, ObjectOutputStream out) {
         this.playerName = playerName;
@@ -42,7 +40,6 @@ public class LudoBoardUI extends JFrame {
         setLayout(new BorderLayout());
         getContentPane().setBackground(DARK_BG);
 
-        // Create main layout with modern design
         initializeComponents();
 
         setSize(1300, 800);
@@ -52,13 +49,13 @@ public class LudoBoardUI extends JFrame {
     }
     
     private void initializeComponents() {
-        // Top panel - Game info and controls
+        // Top panel
         JPanel topPanel = createTopPanel();
         add(topPanel, BorderLayout.NORTH);
         
         // Center panel - Split between game board and chat
-        JSplitPane splitPane = createMainSplitPane();
-        add(splitPane, BorderLayout.CENTER);
+        mainSplitPane = createMainSplitPane();
+        add(mainSplitPane, BorderLayout.CENTER);
         
         // Bottom panel - Dice roll button
         JPanel bottomPanel = createBottomPanel();
@@ -82,11 +79,41 @@ public class LudoBoardUI extends JFrame {
         infoLabel.setForeground(ACCENT_COLOR);
         panel.add(infoLabel, BorderLayout.CENTER);
         
-        // Right side - Player name
+        // Right side - Player name and chat toggle
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        rightPanel.setBackground(PANEL_BG);
+        
         JLabel playerLabel = new JLabel("Player: " + playerName);
         playerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         playerLabel.setForeground(TEXT_COLOR);
-        panel.add(playerLabel, BorderLayout.EAST);
+        rightPanel.add(playerLabel);
+        
+        // Chat toggle button
+        chatToggleButton = new JButton("Close Chat");
+        chatToggleButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        chatToggleButton.setBackground(PRIMARY_COLOR);
+        chatToggleButton.setForeground(Color.WHITE);
+        chatToggleButton.setFocusPainted(false);
+        chatToggleButton.setBorderPainted(false);
+        chatToggleButton.setPreferredSize(new Dimension(110, 35));
+        chatToggleButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        chatToggleButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                chatToggleButton.setBackground(PRIMARY_HOVER);
+            }
+            
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                chatToggleButton.setBackground(PRIMARY_COLOR);
+            }
+        });
+        
+        chatToggleButton.addActionListener(e -> toggleChat());
+        rightPanel.add(chatToggleButton);
+        
+        panel.add(rightPanel, BorderLayout.EAST);
         
         return panel;
     }
@@ -107,7 +134,7 @@ public class LudoBoardUI extends JFrame {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, boardContainer, chatPanel);
         splitPane.setDividerLocation(680);
         splitPane.setDividerSize(3);
-        splitPane.setResizeWeight(0.65); // Give 65% to game board
+        splitPane.setResizeWeight(0.65);
         splitPane.setBorder(null);
         splitPane.setBackground(DARK_BG);
         
@@ -119,8 +146,8 @@ public class LudoBoardUI extends JFrame {
         panel.setBackground(PANEL_BG);
         panel.setBorder(new EmptyBorder(10, 20, 15, 20));
         
-        // Dice roll button with modern styling
-        rollDiceButton = new JButton("Roll Dice");
+        // Dice roll button
+        rollDiceButton = new JButton("🎲 Roll Dice");
         rollDiceButton.setFont(new Font("Segoe UI", Font.BOLD, 18));
         rollDiceButton.setBackground(PRIMARY_COLOR);
         rollDiceButton.setForeground(Color.WHITE);
@@ -130,7 +157,6 @@ public class LudoBoardUI extends JFrame {
         rollDiceButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         rollDiceButton.setEnabled(false);
         
-        // Hover effect
         rollDiceButton.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -150,6 +176,23 @@ public class LudoBoardUI extends JFrame {
         
         return panel;
     }
+    
+    private void toggleChat() {
+        chatVisible = !chatVisible;
+        
+        if (chatVisible) {
+            mainSplitPane.setRightComponent(chatPanel);
+            mainSplitPane.setDividerLocation(680);
+            chatToggleButton.setText("Close Chat");
+        } else {
+            mainSplitPane.setRightComponent(null);
+            mainSplitPane.setDividerLocation(1.0);
+            chatToggleButton.setText("Open Chat");
+        }
+        
+        mainSplitPane.revalidate();
+        mainSplitPane.repaint();
+    }
 
     private void rollDice() {
         try {
@@ -164,22 +207,41 @@ public class LudoBoardUI extends JFrame {
 
     public void updatePositionsFromState(String stateText) {
         Map<String, Integer> newPos = new HashMap<>();
+        int[] colors = new int[4];
+        
         try {
             String[] parts = stateText.split(",");
+            int idx = 0;
             for (String p : parts) {
                 if (p.contains("=")) {
                     String[] kv = p.trim().split("=");
-                    newPos.put(kv[0], Integer.parseInt(kv[1]));
+                    String name = kv[0];
+                    int pos = Integer.parseInt(kv[1]);
+                    newPos.put(name, pos);
+                    colors[idx] = idx; // Assign colors in order
+                    idx++;
                 }
             }
-            positions = newPos;
-            boardPanel.updatePositions(newPos);
-        } catch (Exception ignored) {}
+            boardPanel.updatePositions(newPos, colors);
+        } catch (Exception e) {
+            System.err.println("Error parsing state: " + e.getMessage());
+        }
     }
 
     public void showMessage(String msg) {
         SwingUtilities.invokeLater(() -> {
             infoLabel.setText(msg);
+            
+            // Change color based on message type
+            if (msg.contains("Your turn")) {
+                infoLabel.setForeground(SUCCESS_COLOR);
+            } else if (msg.contains("Need 6") || msg.contains("Need exact")) {
+                infoLabel.setForeground(new Color(239, 68, 68));
+            } else if (msg.contains("Roll again")) {
+                infoLabel.setForeground(new Color(250, 204, 21));
+            } else {
+                infoLabel.setForeground(ACCENT_COLOR);
+            }
         });
     }
 
@@ -201,5 +263,18 @@ public class LudoBoardUI extends JFrame {
     public void updateUserList(String[] users) {
         chatPanel.updateUserList(users);
     }
+    
+    public void updatePlayers(Map<String, Player> players) {
+        Map<String, Integer> positions = new HashMap<>();
+        int[] colors = new int[players.size()];
+        
+        int index = 0;
+        for (Player player : players.values()) {
+            positions.put(player.getName(), player.getPosition());
+            colors[index] = player.getColor();
+            index++;
+        }
+        
+        boardPanel.updatePositions(positions, colors);
+    }
 }
-
