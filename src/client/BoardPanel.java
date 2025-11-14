@@ -54,10 +54,10 @@ public class BoardPanel extends JPanel {
         
         // Turn RIGHT at top
         pathCoordinates[idx++] = new Point(7, 0);
+        pathCoordinates[idx++] = new Point(8, 0);
         
-        // GREEN PATH - Starting from position 13 (row 0, col 8) going DOWN
-        pathCoordinates[idx++] = new Point(8, 0);  // Position 13 - GREEN START
-        pathCoordinates[idx++] = new Point(8, 1);
+        // GREEN PATH - Starting from position 13 (row 1, col 8) going DOWN
+        pathCoordinates[idx++] = new Point(8, 1);  // Position 14 - GREEN START
         pathCoordinates[idx++] = new Point(8, 2);
         pathCoordinates[idx++] = new Point(8, 3);
         pathCoordinates[idx++] = new Point(8, 4);
@@ -91,8 +91,8 @@ public class BoardPanel extends JPanel {
         pathCoordinates[idx++] = new Point(4, 8);
         pathCoordinates[idx++] = new Point(3, 8);  // Position 38
         
-        // BLUE PATH - Starting from position 39 (row 8, col 2) going UP
-        pathCoordinates[idx++] = new Point(2, 8);  // Position 39 - BLUE START
+        // BLUE PATH - Starting from position 39 (row 13, col 6) going DOWN
+        pathCoordinates[idx++] = new Point(6, 13);  // Position 39 - BLUE START
         pathCoordinates[idx++] = new Point(2, 9);
         pathCoordinates[idx++] = new Point(2, 10);
         pathCoordinates[idx++] = new Point(2, 11);
@@ -133,12 +133,12 @@ public class BoardPanel extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.fillRoundRect(offsetX, offsetY, boardSize, boardSize, 15, 15);
         
+        drawPaths(g2d, offsetX, offsetY);
+        
         drawHomeArea(g2d, offsetX, offsetY, RED_LIGHT, RED);
         drawHomeArea(g2d, offsetX + 9 * CELL_SIZE, offsetY, GREEN_LIGHT, GREEN);
-        drawHomeArea(g2d, offsetX, offsetY + 9 * CELL_SIZE, YELLOW_LIGHT, YELLOW);
-        drawHomeArea(g2d, offsetX + 9 * CELL_SIZE, offsetY + 9 * CELL_SIZE, BLUE_LIGHT, BLUE);
-        
-        drawPaths(g2d, offsetX, offsetY);
+        drawHomeArea(g2d, offsetX + 9 * CELL_SIZE, offsetY + 9 * CELL_SIZE, YELLOW_LIGHT, YELLOW);
+        drawHomeArea(g2d, offsetX, offsetY + 9 * CELL_SIZE, BLUE_LIGHT, BLUE);
         drawHomeTriangles(g2d, offsetX, offsetY);
         drawCenterHome(g2d, offsetX + boardSize / 2, offsetY + boardSize / 2);
         drawGridLines(g2d, offsetX, offsetY, boardSize);
@@ -178,16 +178,12 @@ public class BoardPanel extends JPanel {
             
             if (i == 0) {
                 drawStartMarker(g2d, x, y, RED, "START");
-            } else if (i == 13) {
+            } else if (i == 14) {
                 drawStartMarker(g2d, x, y, GREEN, "START");
-            } else if (i == 27) {
+            } else if (i == 28) {
                 drawStartMarker(g2d, x, y, YELLOW, "START");
             } else if (i == 39) {
                 drawStartMarker(g2d, x, y, BLUE, "START");
-            }
-            
-            if (i == 8 || i == 21 || i == 35 || i == 47) {
-                drawStar(g2d, x + CELL_SIZE/2, y + CELL_SIZE/2, 8);
             }
         }
     }
@@ -311,8 +307,8 @@ public class BoardPanel extends JPanel {
         switch(playerColor) {
             case 0: homeX = offsetX + 3 * CELL_SIZE; homeY = offsetY + 3 * CELL_SIZE; break;
             case 1: homeX = offsetX + 12 * CELL_SIZE; homeY = offsetY + 3 * CELL_SIZE; break;
-            case 2: homeX = offsetX + 3 * CELL_SIZE; homeY = offsetY + 12 * CELL_SIZE; break;
-            case 3: homeX = offsetX + 12 * CELL_SIZE; homeY = offsetY + 12 * CELL_SIZE; break;
+            case 2: homeX = offsetX + 12 * CELL_SIZE; homeY = offsetY + 12 * CELL_SIZE; break;
+            case 3: homeX = offsetX + 3 * CELL_SIZE; homeY = offsetY + 12 * CELL_SIZE; break;
         }
         
         drawToken(g2d, homeX, homeY, color, label);
@@ -332,12 +328,12 @@ public class BoardPanel extends JPanel {
                 y = offsetY + (1 + homePos) * CELL_SIZE;
                 break;
             case 2: // Yellow
-                x = offsetX + (13 - homePos) * CELL_SIZE;
-                y = offsetY + 7 * CELL_SIZE;
-                break;
-            case 3: // Blue
                 x = offsetX + 7 * CELL_SIZE;
                 y = offsetY + (13 - homePos) * CELL_SIZE;
+                break;
+            case 3: // Blue
+                x = offsetX + (13 - homePos) * CELL_SIZE;
+                y = offsetY + 7 * CELL_SIZE;
                 break;
         }
         
